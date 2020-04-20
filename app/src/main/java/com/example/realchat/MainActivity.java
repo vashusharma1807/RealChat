@@ -1,5 +1,8 @@
 package com.example.realchat;
 
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,6 +32,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -81,18 +85,61 @@ public class MainActivity extends AppCompatActivity {
             updateUserStatus("online");
             verifyUserExistance();
         }
-        Toast.makeText(this, "Onstart", Toast.LENGTH_SHORT).show();
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser!=null)
+
+        if(isActivityRunning(ChatActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(MainActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(FindFriendsActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(GroupChatActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(ImageViewerActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(SettingsActivity.class))
+        {
+            updateUserStatus("online");
+        }
+        else if(isActivityRunning(ProfileActivity.class))
+        {
+            updateUserStatus("online");
+        }
+
+
+        else
         {
             updateUserStatus("offline");
         }
-        Toast.makeText(this, "Onstop", Toast.LENGTH_SHORT).show();
+
+    }
+
+    protected Boolean isActivityRunning(Class activityClass)
+    {
+        ActivityManager activityManager = (ActivityManager) getBaseContext().getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> tasks = activityManager.getRunningTasks(Integer.MAX_VALUE);
+
+        for (ActivityManager.RunningTaskInfo task : tasks) {
+            if (activityClass.getCanonicalName().equalsIgnoreCase(task.baseActivity.getClassName()))
+                return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -103,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         {
             updateUserStatus("offline");
         }
-        Toast.makeText(this, "OnDestroy", Toast.LENGTH_SHORT).show();
+
     }
 
     private void verifyUserExistance() {
@@ -251,15 +298,5 @@ public class MainActivity extends AppCompatActivity {
         Rootref.child("Users").child(currentUserID).child("userState")
                 .updateChildren(onlineStateMap);
     }
-
-
-
-
-
-
-
-
-
-
 
 }
