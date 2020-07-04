@@ -76,7 +76,6 @@ public class FindFriendsActivity extends AppCompatActivity {
             protected void onBindViewHolder(@NonNull FindFriendViewHolder holder, final int position, @NonNull Contacts model) {
                 holder.username.setText(model.getName());
                 holder.userstatus.setText(model.getStatus());
-                //TODO -- Image Update
                 Picasso.get().load(model.getImage()).placeholder(R.drawable.profile_image).into(holder.profileImage);
 
                 holder.itemView.setOnClickListener(new View.OnClickListener() {

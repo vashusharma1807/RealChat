@@ -180,7 +180,6 @@ public class SettingsActivity extends AppCompatActivity
                         if (task.isSuccessful())
                         {
                             Toast.makeText(SettingsActivity.this, "Profile Image uploaded Successfully..."+task.toString(), Toast.LENGTH_SHORT).show();
-                            //TODO//
                             Uri  downloadUrl = task.getResult();
                             String myUrl = downloadUrl.toString();
 
