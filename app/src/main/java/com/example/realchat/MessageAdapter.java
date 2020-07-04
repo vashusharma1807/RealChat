@@ -1,6 +1,7 @@
 package com.example.realchat;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -14,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,10 +25,25 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.List;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -36,9 +51,15 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     private List<Messages> userMessagesList;
     private FirebaseAuth mAuth;
-    private DatabaseReference userRef;
-    private DatabaseReference Rootref ;
-    private String currentUserID ;
+    private DatabaseReference userRef , Rootref;
+
+
+    private byte encryptionKey[] = {9,115,51,86,105,4,-31,-23,-68,88,17,20,3,-105,119,-53};
+    private Cipher decipher ;
+    private SecretKeySpec secretKeySpec ;
+
+    private String password = "vashu";
+
 
     public MessageAdapter (List<Messages> userMessagesList)
     {
@@ -71,8 +92,19 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
             senderMessageImageTime=(TextView) itemView.findViewById(R.id.sender_message_image_time);
 
+            try {
+                decipher = Cipher.getInstance("AES");
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchPaddingException e) {
+                e.printStackTrace();
+            }
+
+            secretKeySpec = new SecretKeySpec(encryptionKey , "AES");
 
         }
+
+
     }
 
 
@@ -145,7 +177,19 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
                 holder.senderMessageText.setBackgroundResource(R.drawable.sender_messages_layout);
                 holder.senderMessageText.setTextColor(Color.BLACK);
-                holder.senderMessageText.setText(messages.getMessage());
+
+                String messageText = messages.getMessage() ;
+                try {
+
+                    messageText = AESDecryptionMethod(messageText);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+
+                holder.senderMessageText.setText(messageText);
                 holder.senderMessageTime.setText(messages.getTime());
 
             }
@@ -160,7 +204,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                 holder.recieverMessageText.setBackgroundResource(R.drawable.receiver_messages_layout);
                 holder.recieverMessageText.setTextColor(Color.BLACK);
 
-                holder.recieverMessageText.setText(messages.getMessage());
+
+                String messageText = messages.getMessage() ;
+                try {
+                    messageText = AESDecryptionMethod(messageText);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+
+                holder.recieverMessageText.setText(messageText);
                 holder.receiverMessageTime.setText(messages.getTime());
 
 
@@ -251,21 +304,24 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                {
                                    deleteSentMessage(position,holder);
                                    Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
+                                   intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                    holder.itemView.getContext().startActivity(intent);
                                }
                                else if(i==1)
                                {
 
                                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(userMessagesList.get(position).getMessage()));
+                                   intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
-
+                                    Context c = holder.itemView.getContext();
+                                   ((ChatActivity)c).finish();
                                }
 
                                else if(i==3)
                                {
                                    deleteMessageForEveryone(position,holder);
                                    Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
-
+                                   intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                    holder.itemView.getContext().startActivity(intent);
                                }
 
@@ -294,6 +350,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
                                     deleteSentMessage(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
 
                                     holder.itemView.getContext().startActivity(intent);
 
@@ -304,6 +361,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                     Intent intent = new Intent(holder.itemView.getContext(),ImageViewerActivity.class);
                                     intent.putExtra("url",userMessagesList.get(position).getMessage());
                                     holder.itemView.getContext().startActivity(intent);
+                                    Context c = holder.itemView.getContext();
+                                    ((ChatActivity)c).finish();
 
                                 }
 
@@ -311,6 +370,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
                                     deleteMessageForEveryone(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
 
                                     holder.itemView.getContext().startActivity(intent);
 
@@ -351,7 +411,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                     view.setVisibility(View.INVISIBLE);
                                     deleteRecievedMessage(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
-
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
 
 
@@ -360,7 +420,10 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
 
                                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(userMessagesList.get(position).getMessage()));
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
+                                    Context c = holder.itemView.getContext();
+                                    ((ChatActivity)c).finish();
 
                                 }
 
@@ -389,7 +452,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
                                     deleteRecievedMessage(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
-
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
 
                                 }
@@ -398,6 +461,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                     Intent intent = new Intent(holder.itemView.getContext(),ImageViewerActivity.class);
                                     intent.putExtra("url",userMessagesList.get(position).getMessage());
                                     holder.itemView.getContext().startActivity(intent);
+                                    Context c = holder.itemView.getContext();
+                                    ((ChatActivity)c).finish();
 
                                 }
                             }
@@ -431,7 +496,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
                                     deleteSentMessage(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
-
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
 
                                 }
@@ -440,7 +505,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                 {
                                     deleteMessageForEveryone(position,holder);
                                     Intent intent = new Intent(holder.itemView.getContext(),MainActivity.class);
-
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
 
 
@@ -476,7 +541,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                                     userMessagesList.get(position).setMessage("");
                                     deleteRecievedMessage(position, holder);
                                     Intent intent = new Intent(holder.itemView.getContext(), MainActivity.class);
-
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
                                     holder.itemView.getContext().startActivity(intent);
 
                                 }
@@ -492,8 +557,31 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     }
     }
 
+    private String AESDecryptionMethod(String message) throws UnsupportedEncodingException {
+
+        byte[] EncryptedByte = message.getBytes("ISO-8859-1");
 
 
+        String decryptedString = message ;
+
+        byte[] decryption ;
+
+        try {
+            decipher.init(Cipher.DECRYPT_MODE , secretKeySpec);
+            decryption = decipher.doFinal(EncryptedByte);
+            decryptedString = new String(decryption);
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+
+
+        return decryptedString;
+    }
 
 
     @Override
@@ -577,30 +665,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             }
         });
 
-
     }
 
-   /* private void updateUserStatus (String state)
-    {
-        String saveCurrentTime , saveCurrentDate ;
-
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
-        saveCurrentDate=currentDate.format(calendar.getTime());
-
-        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
-        saveCurrentTime=currentTime.format(calendar.getTime());
-
-        HashMap<String , Object> onlineStateMap = new HashMap<>();
-        onlineStateMap.put("time",saveCurrentTime);
-        onlineStateMap.put("date",saveCurrentDate);
-        onlineStateMap.put("state",state);
-
-        currentUserID = mAuth.getCurrentUser().getUid();
-
-        Rootref.child("Users").child(currentUserID).child("userState")
-                .updateChildren(onlineStateMap);
-    }*/
 
 }

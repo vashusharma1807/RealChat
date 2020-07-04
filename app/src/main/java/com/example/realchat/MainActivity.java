@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         mtoolbar=(Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mtoolbar);
-        getSupportActionBar().setTitle("  Chat Point");
+        getSupportActionBar().setTitle(" Chat Point");
 
         getSupportActionBar().setIcon(R.drawable.weixing);
 
@@ -71,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart()
+    {
         super.onStart();
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -88,46 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
 
-        if(isActivityRunning(ChatActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(MainActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(FindFriendsActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(GroupChatActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(ImageViewerActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(SettingsActivity.class))
-        {
-            updateUserStatus("online");
-        }
-        else if(isActivityRunning(ProfileActivity.class))
-        {
-            updateUserStatus("online");
-        }
-
-
-        else
-        {
-            updateUserStatus("offline");
-        }
-
-    }
 
     protected Boolean isActivityRunning(Class activityClass)
     {
@@ -293,8 +255,8 @@ public class MainActivity extends AppCompatActivity {
         onlineStateMap.put("date",saveCurrentDate);
         onlineStateMap.put("state",state);
 
-        currentUserID = mAuth.getCurrentUser().getUid();
 
+        currentUserID=mAuth.getCurrentUser().getUid();
         Rootref.child("Users").child(currentUserID).child("userState")
                 .updateChildren(onlineStateMap);
     }

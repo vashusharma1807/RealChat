@@ -159,7 +159,7 @@ public class GroupChatActivity extends AppCompatActivity {
         sendMessageButton=(ImageButton) findViewById(R.id.send_message_button);
         displayTextMessages=(TextView) findViewById(R.id.group_chat_text_display);
         mScrollView=(ScrollView) findViewById(R.id.my_scroll_view);
-        userMessageInput=(EditText) findViewById(R.id.input_group);
+        userMessageInput=(EditText) findViewById(R.id.input_group_message);
     }
 
 

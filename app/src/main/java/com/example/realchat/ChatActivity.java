@@ -43,12 +43,21 @@ import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -76,6 +85,11 @@ public class ChatActivity extends AppCompatActivity {
 
     private String currentUserID ;
 
+    private byte encryptionKey[] = {9, 115, 51, 86, 105, 4, -31, -23, -68, 88, 17, 20, 3, -105, 119, -53};
+    private Cipher cipher  ;
+    private SecretKeySpec secretKeySpec ;
+
+    private String password = "vashu";
 
 
     @Override
@@ -83,15 +97,14 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        mAuth=FirebaseAuth.getInstance();
-        messageSenderId=mAuth.getCurrentUser().getUid();
+        mAuth = FirebaseAuth.getInstance();
+        messageSenderId = mAuth.getCurrentUser().getUid();
 
-        RootRef= FirebaseDatabase.getInstance().getReference();
+        RootRef = FirebaseDatabase.getInstance().getReference();
 
-        messageReceiverId=getIntent().getExtras().get("visit_user_id").toString();
-        messageReceiverName=getIntent().getExtras().get("visit_user_name").toString();
+        messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
+        messageReceiverName = getIntent().getExtras().get("visit_user_name").toString();
         messageReceiverImage = getIntent().getExtras().get("visit_user_image").toString();
-
 
 
         IntializeControllers();
@@ -100,9 +113,11 @@ public class ChatActivity extends AppCompatActivity {
         userImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ChatActivity.this , ImageViewerActivity.class);
-                intent.putExtra("url",messageReceiverImage);
+
+                Intent intent = new Intent(ChatActivity.this, ImageViewerActivity.class);
+                intent.putExtra("url", messageReceiverImage);
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -123,7 +138,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                 CharSequence options[] = new CharSequence[]
                         {
-                          "Images",
+                                "Images",
                                 "PDF Files",
                                 "Ms Word Files"
 
@@ -132,34 +147,30 @@ public class ChatActivity extends AppCompatActivity {
                 builder.setTitle("Select the file");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialogInterface, int i)
-                    {
-                        if(i==0)
-                        {
-                            checker="image";
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (i == 0) {
+                            checker = "image";
                             Intent intent = new Intent();
                             intent.setAction(Intent.ACTION_GET_CONTENT);
                             intent.setType("image/*");
-                            startActivityForResult(intent.createChooser(intent,"Select Image"),438);
+                            startActivityForResult(intent.createChooser(intent, "Select Image"), 438);
                         }
-                        if(i==1)
-                        {
+                        if (i == 1) {
 
-                            checker="pdf";
+                            checker = "pdf";
                             Intent intent = new Intent();
                             intent.setAction(Intent.ACTION_GET_CONTENT);
                             intent.setType("application/pdf");
-                            startActivityForResult(intent.createChooser(intent,"Select PDF File"),438);
+                            startActivityForResult(intent.createChooser(intent, "Select PDF File"), 438);
 
 
                         }
-                        if(i==2)
-                        {
-                            checker="docx";
+                        if (i == 2) {
+                            checker = "docx";
                             Intent intent = new Intent();
                             intent.setAction(Intent.ACTION_GET_CONTENT);
                             intent.setType("application/msword");
-                            startActivityForResult(intent.createChooser(intent,"Select MS Word File"),438);
+                            startActivityForResult(intent.createChooser(intent, "Select MS Word File"), 438);
 
                         }
 
@@ -168,7 +179,6 @@ public class ChatActivity extends AppCompatActivity {
                 builder.show();
             }
         });
-
 
     }
 
@@ -211,6 +221,19 @@ public class ChatActivity extends AppCompatActivity {
         saveCurrentTime=currentTime.format(calendar.getTime());
 
         loadingBar = new ProgressDialog(this);
+
+
+        try {
+            cipher = Cipher.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        }
+
+        secretKeySpec = new SecretKeySpec(encryptionKey , "AES");
+
+
     }
 
     @Override
@@ -458,6 +481,8 @@ public class ChatActivity extends AppCompatActivity {
     private void SendMessage()
     {
         String messageText = MessageInputText.getText().toString();
+
+
         if(!TextUtils.isEmpty(messageText))
         {
             String messageSenderRef ="Message/"+messageSenderId+"/"+messageReceiverId;
@@ -466,6 +491,10 @@ public class ChatActivity extends AppCompatActivity {
             DatabaseReference userMessageKeyRef=RootRef.child("Message").child(messageSenderId).child(messageReceiverId).push();
 
             String messagePushId= userMessageKeyRef.getKey();
+
+
+            messageText = AESEncryptionMethod(messageText);
+
 
             Map messageTextBody = new HashMap();
             messageTextBody.put("message",messageText);
@@ -498,4 +527,36 @@ public class ChatActivity extends AppCompatActivity {
             });
         }
     }
+
+
+    private String AESEncryptionMethod(String string){
+
+        byte[] stringByte = string.getBytes();
+        byte[] encryptedByte = new byte[stringByte.length];
+
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+            encryptedByte = cipher.doFinal(stringByte);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+
+        String returnString = null;
+
+        try {
+            returnString = new String(encryptedByte, "ISO-8859-1");
+            Toast.makeText(this, returnString, Toast.LENGTH_SHORT).show();
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return returnString;
+    }
+
+
+
 }

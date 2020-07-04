@@ -26,14 +26,14 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText UserEmail,UserPassword;
     private TextView AlreadyHaveAccountLink;
     private ProgressDialog loadingBar;
-    private DatabaseReference Rootref;
+    private DatabaseReference Rootref , UserRef;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
         Rootref= FirebaseDatabase.getInstance().getReference();
-
+        UserRef = FirebaseDatabase.getInstance().getReference().child("Users");
         Initialize();
     }
     private void Initialize() {
@@ -54,7 +54,6 @@ public class RegisterActivity extends AppCompatActivity {
     }
     private void CreateNewAccount()
     {
-        //Toast.makeText(this,"Creating button",Toast.LENGTH_LONG).show();
         String email = UserEmail.getText().toString();
         String password = UserPassword.getText().toString();
 
@@ -85,7 +84,19 @@ public class RegisterActivity extends AppCompatActivity {
                         String currentUserId = mAuth.getCurrentUser().getUid();
                         Rootref.child("Users").child(currentUserId).child("device_token").setValue(deviceToken);
 
-                        Rootref.child("Users").child(currentUserId).setValue("");
+                        UserRef.child(currentUserId).child("device_token").setValue(deviceToken)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if(task.isSuccessful())
+                                        {
+                                            SendToMainActivityFun();
+                                            Toast.makeText(RegisterActivity.this, "Signed in Successfully :-)" ,Toast.LENGTH_LONG).show();
+                                            loadingBar.dismiss();
+                                        }
+                                    }
+                                });
+                        //Rootref.child("Users").child(currentUserId).setValue("");
 
                         SendToMainActivityFun();
                         Toast.makeText(RegisterActivity.this, "Account Created Successfully :-)" ,Toast.LENGTH_LONG).show();

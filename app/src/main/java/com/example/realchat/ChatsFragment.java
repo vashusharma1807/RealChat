@@ -24,9 +24,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -62,6 +61,7 @@ public class ChatsFragment extends Fragment {
         currentUserId = mAuth.getCurrentUser().getUid();
         ChatsRef = FirebaseDatabase.getInstance().getReference().child("Contacts").child(currentUserId);
         UsersRef= FirebaseDatabase.getInstance().getReference().child("Users");
+
 
 
         return  PrivateChatsView;
@@ -103,8 +103,6 @@ public class ChatsFragment extends Fragment {
                             }
                             else
                             {
-
-
 
                                 holder.userName.setText(profileName);
 
