@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark">
 
-    <de.hdodenhof.circleimageview.CircleImageView
+    <!--<de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/custom_profile_image"
         android:layout_width="57dp"
         android:layout_height="57dp"
@@ -15,6 +15,8 @@
         android:cropToPadding="true"
         android:layout_marginRight="10dp"
         />
+     -->
+
 
     <TextView
         android:id="@+id/custom_profile_name"

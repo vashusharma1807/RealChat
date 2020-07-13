@@ -18,6 +18,8 @@ import android.os.Bundle;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -64,7 +66,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatActivity extends AppCompatActivity {
     private String messageReceiverId,messageReceiverName,messageReceiverImage,messageSenderId;
     private TextView userName, userLastSeen;
-    private CircleImageView userImage;
     String saveCurrentTime , saveCurrentDate ;
 
     private Toolbar ChatToolBar;
@@ -109,18 +110,6 @@ public class ChatActivity extends AppCompatActivity {
 
         IntializeControllers();
 
-
-        userImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(ChatActivity.this, ImageViewerActivity.class);
-                intent.putExtra("url", messageReceiverImage);
-                startActivity(intent);
-                finish();
-            }
-        });
-
         SendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,7 +118,6 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         userName.setText(messageReceiverName);
-        Picasso.get().load(messageReceiverImage).placeholder(R.drawable.profile_image).into(userImage);
 
         DisplayLastSeen();
 
@@ -197,8 +185,6 @@ public class ChatActivity extends AppCompatActivity {
 
         userName = (TextView) findViewById(R.id.custom_profile_name);
         userLastSeen = (TextView) findViewById(R.id.custom_user_last_seen);
-        userImage = (CircleImageView) findViewById(R.id.custom_profile_image);
-
 
 
 
@@ -555,6 +541,73 @@ public class ChatActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return returnString;
+    }
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.chat_option,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        super.onOptionsItemSelected(item);
+        if(item.getItemId()==R.id.chat_info_option) {
+            userProfile();
+        }
+        if(item.getItemId()==R.id.chat_clearChat_option) {
+            ClearChat();
+        }
+
+        if(item.getItemId()==R.id.chat_timer_option)
+        {
+            AddTimerMessage();
+        }
+
+
+        return true;
+    }
+
+    private void ClearChat() {
+
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+        rootRef.child("Message").child(messageSenderId)
+                .child(messageReceiverId)
+                .removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task)
+            {
+                if(task.isSuccessful())
+                {
+                    Toast.makeText(ChatActivity.this, "Chat Cleared", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ChatActivity.this,MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(ChatActivity.this, "Could not delete messages", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+    }
+
+    private void userProfile() {
+
+        Intent profileIntent = new Intent(ChatActivity.this, ProfileActivity.class);
+        profileIntent.putExtra("visit_user_id",messageReceiverId);
+        profileIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+        startActivity(profileIntent);
+    }
+
+    private void AddTimerMessage() {
+        Intent intent = new Intent(ChatActivity.this,TimerMessageActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+        startActivity(intent);
     }
 
 
