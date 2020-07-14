@@ -5,17 +5,17 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark">
 
-    <!--<de.hdodenhof.circleimageview.CircleImageView
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/custom_profile_image"
-        android:layout_width="57dp"
-        android:layout_height="57dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:src="@drawable/profile_image"
         android:cropToPadding="true"
         android:layout_marginRight="10dp"
         />
-     -->
+
 
 
     <TextView

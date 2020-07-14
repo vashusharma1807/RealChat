@@ -26,23 +26,14 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -71,7 +62,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     public class MessageViewHolder extends RecyclerView.ViewHolder
     {
 
-        public TextView senderMessageText,recieverMessageText , senderMessageTime , receiverMessageTime , senderMessageImageTime , receiverMessageImageTime;
+        public TextView encryptionInfo , senderMessageText,recieverMessageText , senderMessageTime , receiverMessageTime , senderMessageImageTime , receiverMessageImageTime;
         public CircleImageView recieverProfileImage;
 
         public ImageView messageSenderPicture ,messageReceiverPicture;
@@ -152,6 +143,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
             }
         });
+
+
 
         holder.recieverMessageText.setVisibility(View.GONE);
         holder.recieverProfileImage.setVisibility(View.GONE);

@@ -84,8 +84,6 @@ public class ChatActivity extends AppCompatActivity {
     private String checker = "",myUrl="";
     private Uri fileUri ;
 
-    private String currentUserID ;
-
     private byte encryptionKey[] = {9, 115, 51, 86, 105, 4, -31, -23, -68, 88, 17, 20, 3, -105, 119, -53};
     private Cipher cipher  ;
     private SecretKeySpec secretKeySpec ;
@@ -581,7 +579,7 @@ public class ChatActivity extends AppCompatActivity {
 
         try {
             returnString = new String(encryptedByte, "ISO-8859-1");
-            Toast.makeText(this, returnString, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, returnString, Toast.LENGTH_SHORT).show();
         }
         catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -646,14 +644,12 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent profileIntent = new Intent(ChatActivity.this, ProfileActivity.class);
         profileIntent.putExtra("visit_user_id",messageReceiverId);
-        profileIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
         startActivity(profileIntent);
     }
 
     private void AddTimerMessage() {
         Intent intent = new Intent(ChatActivity.this,TimerMessageActivity.class);
         intent.putExtra("Receiver",messageReceiverId);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
         startActivity(intent);
     }
 

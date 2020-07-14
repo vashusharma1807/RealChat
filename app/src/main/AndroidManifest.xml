@@ -14,7 +14,7 @@
         android:roundIcon="@drawable/icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TimerMessageActivity"></activity>
+        <activity android:name=".TimerMessageActivity" />
         <activity android:name=".ForgetPasswordActivity" />
         <activity android:name=".ImageViewerActivity" />
         <activity
@@ -43,6 +43,8 @@
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
+        <receiver android:name="MyBroadcastReceiver" >
+        </receiver>
     </application>
 
 </manifest>

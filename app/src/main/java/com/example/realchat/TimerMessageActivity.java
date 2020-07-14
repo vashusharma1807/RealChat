@@ -2,9 +2,13 @@ package com.example.realchat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -21,7 +25,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,10 +41,10 @@ public class TimerMessageActivity extends AppCompatActivity {
     private String date,time;
     private Button addWork,selectDate , selectTime ;
     private FirebaseUser currUser;
-    private String recieverUser;
+    private String recieverUser , messagePushId;
     private FirebaseAuth mAuth ;
     private DatabaseReference RootRef ;
-
+    private Toolbar timerToolBar;
 
 
     @Override
@@ -53,7 +60,7 @@ public class TimerMessageActivity extends AppCompatActivity {
 
 
         date="00-00-0000";
-        time = "00:00";
+        time = "00:00:00";
 
         initiate();
 
@@ -90,11 +97,13 @@ public class TimerMessageActivity extends AppCompatActivity {
                 }
                 else {
 
-                    String messageSenderRef ="Message/"+currUser.getUid()+"/"+recieverUser;
-                    String messageRecieverRef ="Message/"+recieverUser+"/"+currUser.getUid();
+                    String messageSenderRef ="Timer Message/"+currUser.getUid()+"/"+recieverUser;
+                    String messageRecieverRef ="Timer Message/"+recieverUser+"/"+currUser.getUid();
 
                     DatabaseReference userMessageKeyRef = RootRef.child("Timer Message").child(currUser.getUid()).child(recieverUser).push();
-                    String messagePushId= userMessageKeyRef.getKey();
+                    messagePushId= userMessageKeyRef.getKey();
+
+
 
                     Map messageTextBody = new HashMap();
                     messageTextBody.put("message",message);
@@ -115,6 +124,9 @@ public class TimerMessageActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task task) {
                             if(task.isSuccessful()) {
                                 Toast.makeText(TimerMessageActivity.this, "Message Added", Toast.LENGTH_SHORT).show();
+                                addAlarm();
+                                //Intent intent = new Intent(TimerMessageActivity.this , ChatActivity.class);
+                                //startActivity(intent);
                             }
                             else
                             {
@@ -130,6 +142,58 @@ public class TimerMessageActivity extends AppCompatActivity {
         });
 
 
+
+    }
+
+    private void addAlarm() {
+
+        Toast.makeText(this, "Alarm Added", Toast.LENGTH_SHORT).show();
+
+        Calendar calendar = Calendar.getInstance();
+
+        SimpleDateFormat currentDate = new SimpleDateFormat("dd-MM-yyyy");
+        String saveCurrentDate=currentDate.format(calendar.getTime());
+
+        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm aa");
+        String saveCurrentTime=currentTime.format(calendar.getTime());
+
+
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+        long diff=0;
+        String k = saveCurrentTime.substring(saveCurrentTime.length() - 2);
+        if(k.equals("pm"))
+        {
+            diff = -43200000;
+
+        }
+
+        Date d1 = null;
+        Date d2 = null;
+
+        try {
+            d1=format.parse(date+" "+time);
+            d2=format.parse(saveCurrentDate+" "+saveCurrentTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        diff += (d1.getTime() - d2.getTime());
+
+        Intent intent = new Intent(this, MyBroadcastReceiver.class);
+        intent.putExtra("Sender",currUser.getUid());
+        intent.putExtra("Receiver",recieverUser);
+        intent.putExtra("Push Id",messagePushId);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), 1, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + diff, pendingIntent);
+        Toast.makeText(this, "Message set in " + diff/1000 + " seconds",Toast.LENGTH_LONG).show();
+
+
+
+        //PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+        //alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), AlarmManager.INTERVAL_FIFTEEN_MINUTES, pendingIntent);
+        Toast.makeText(this, "Alarm will ring after every 15 minutes interval",Toast.LENGTH_LONG).show();
 
     }
 
@@ -164,6 +228,7 @@ public class TimerMessageActivity extends AppCompatActivity {
         int mHour = c.get(Calendar.HOUR_OF_DAY);
         int mMinute = c.get(Calendar.MINUTE);
 
+
         // Launch Time Picker Dialog
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
                 new TimePickerDialog.OnTimeSetListener() {
@@ -185,6 +250,12 @@ public class TimerMessageActivity extends AppCompatActivity {
         addWork = (Button) findViewById(R.id.add_job);
         selectDate=(Button) findViewById(R.id.select_date);
         selectTime=(Button) findViewById(R.id.select_time);
+
+        timerToolBar = (Toolbar) findViewById(R.id.timer_message_bar);
+        setSupportActionBar(timerToolBar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
+        getSupportActionBar().setTitle("Timer Messages");
 
     }
 
