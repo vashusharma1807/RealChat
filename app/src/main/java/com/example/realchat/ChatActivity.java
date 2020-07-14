@@ -168,6 +168,53 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+
+        try {
+            retrieveMessages();
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void retrieveMessages() {
+
+
+        RootRef.child("Message").child(messageSenderId).child(messageReceiverId)
+                .addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        Messages messages = dataSnapshot.getValue(Messages.class);
+
+                        messagesList.add(messages);
+
+                        messageAdapter.notifyDataSetChanged();
+
+                        userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+                    }
+
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
     }
 
     private void IntializeControllers() {
@@ -226,7 +273,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        RootRef.child("Message").child(messageSenderId).child(messageReceiverId)
+        /*RootRef.child("Message").child(messageSenderId).child(messageReceiverId)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -258,7 +305,7 @@ public class ChatActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
                     }
-                });
+                });*/
     }
 
     @Override
@@ -478,7 +525,6 @@ public class ChatActivity extends AppCompatActivity {
 
             String messagePushId= userMessageKeyRef.getKey();
 
-
             messageText = AESEncryptionMethod(messageText);
 
 
@@ -606,10 +652,10 @@ public class ChatActivity extends AppCompatActivity {
 
     private void AddTimerMessage() {
         Intent intent = new Intent(ChatActivity.this,TimerMessageActivity.class);
+        intent.putExtra("Receiver",messageReceiverId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
         startActivity(intent);
     }
-
 
 
 }
